@@ -15,7 +15,7 @@ pub type CapabilityRequest = webdriverbidi::webdriver::capabilities::CapabilityR
 
 // --------------------------------------------------
 
-/// The `Browser` struct provides an interface for managing a WebDriver BiDi session
+/// The `Bot` struct provides an interface for managing a WebDriver BiDi session
 /// and performing browser operations such as opening, closing, and navigating to URLs.
 ///
 /// # Fields
@@ -28,6 +28,23 @@ pub type CapabilityRequest = webdriverbidi::webdriver::capabilities::CapabilityR
 pub struct Bot {
     pub webdriverbidi_session: WebDriverBiDiSession,
     pub browsing_context: Option<String>,
+}
+
+// --------------------------------------------------
+
+impl Bot {
+    /// Returns the browsing context if it's not None.
+    ///
+    /// # Errors
+    ///
+    /// A `BotError::NavigationError` error is returned if the context value is None.
+    fn get_context(&self) -> Result<String, BotError> {
+        let ctx = self
+            .browsing_context
+            .as_ref()
+            .ok_or_else(|| BotError::NavigationError("No browsing context available".to_owned()))?;
+        Ok(ctx.to_string())
+    }
 }
 
 // --------------------------------------------------
@@ -115,20 +132,50 @@ impl Bot {
     /// # Errors
     /// Returns a `BrowserError::NavigationError` if no browsing context is available
     /// or if the navigation command fails.
-    pub async fn goto(&mut self, url: &str) -> Result<(), BotError> {
+    pub async fn load(&mut self, url: &str) -> Result<(), BotError> {
         debug!("Navigating to URL: {}", url);
-        nav::goto(
-            &mut self.webdriverbidi_session,
-            self.browsing_context
-                .as_ref()
-                .ok_or_else(|| {
-                    BotError::NavigationError("No browsing context available".to_owned())
-                })?
-                .to_string(),
-            url,
-        )
-        .await?;
+        let ctx = self.get_context()?;
+        nav::load(&mut self.webdriverbidi_session, ctx, url).await?;
         debug!("Navigation to URL: {} completed successfully", url);
+        Ok(())
+    }
+
+    // --------------------------------------------------
+
+    /// Navigates to the previous page in history.
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::NavigationError` if no browsing context is available
+    /// or if navigating back failed.
+    pub async fn go_back(&mut self) -> Result<(), BotError> {
+        let ctx = self.get_context()?;
+        nav::go_back(&mut self.webdriverbidi_session, ctx).await?;
+        Ok(())
+    }
+
+    // --------------------------------------------------
+
+    /// Navigates to the next page in history.
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::NavigationError` if no browsing context is available
+    /// or if navigating forward failed.
+    pub async fn go_forward(&mut self) -> Result<(), BotError> {
+        let ctx = self.get_context()?;
+        nav::go_forward(&mut self.webdriverbidi_session, ctx).await?;
+        Ok(())
+    }
+
+    // --------------------------------------------------
+
+    /// Reloads the current page.
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::NavigationError` if no browsing context is available
+    /// or if navigating forward failed.
+    pub async fn reload(&mut self) -> Result<(), BotError> {
+        let ctx = self.get_context()?;
+        nav::reload(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
     }
 }

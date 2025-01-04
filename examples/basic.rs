@@ -15,15 +15,15 @@ async fn main() {
     let always_match = CapabilityRequest::new();
     let capabilities = Capabilities::new(always_match);
 
-    // Initialize a new browser
-    let mut browser = Bot::new(capabilities, "localhost", 4444);
-    // Open the browser
-    browser.open().await.unwrap();
+    // Initialize a new Bot instance
+    let mut bot = Bot::new(capabilities, "localhost", 4444);
+    // Open the browser window
+    bot.open().await.unwrap();
 
     // Go to rust-lang.org
-    browser.goto("https://www.rust-lang.org/").await.expect("");
+    bot.load("https://www.rust-lang.org/").await.expect("");
     sleep(3).await;
 
-    // Clone the browser
-    browser.close().await.unwrap();
+    // Clone the browser window
+    bot.close().await.unwrap();
 }
