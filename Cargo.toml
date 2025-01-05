@@ -11,6 +11,7 @@ repository = "https://github.com/TahaHachana/autom8"
 thiserror = "2.0.9"
 webdriverbidi = "0.1.8"
 log = "0.4.22"
+base64 = "0.22.1"
 
 [dev-dependencies]
 tokio = "1.42.0"

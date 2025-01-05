@@ -5,7 +5,7 @@ use webdriverbidi::session::WebDriverBiDiSession;
 // --------------------------------------------------
 
 use crate::error::BotError;
-use crate::nav;
+use crate::{nav, screenshot};
 
 // --------------------------------------------------
 
@@ -178,4 +178,17 @@ impl Bot {
         nav::reload(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
     }
+}
+
+// --------------------------------------------------
+
+// Screenshots
+impl Bot {
+    
+    pub async fn take_screenshot(&mut self) -> Result<String, BotError> {
+        let ctx = self.get_context()?;
+        let data = screenshot::take_screenshot(&mut self.webdriverbidi_session, ctx).await?;
+        Ok(data)
+    }
+    
 }
