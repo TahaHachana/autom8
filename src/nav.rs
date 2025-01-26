@@ -5,7 +5,7 @@ use webdriverbidi::session::WebDriverBiDiSession;
 
 // --------------------------------------------------
 
-use crate::error::BotError;
+use crate::error::BrowserError;
 
 // --------------------------------------------------
 
@@ -19,14 +19,12 @@ async fn traverse_history(
     session: &mut WebDriverBiDiSession,
     context: String,
     delta: i64,
-) -> Result<(), BotError> {
+) -> Result<(), BrowserError> {
     let traverse_history_params = TraverseHistoryParameters::new(context, delta);
     session
         .browsing_context_traverse_history(traverse_history_params)
         .await
-        .map_err(|e| {
-            BotError::NavigationError(format!("Navigating the history failed: {}", e.to_string()))
-        })?;
+        .map_err(|e| BrowserError::Navigation(format!("Navigating the history failed: {}", e)))?;
     Ok(())
 }
 
@@ -37,7 +35,7 @@ pub async fn load(
     session: &mut WebDriverBiDiSession,
     browsing_context: String,
     url: &str,
-) -> Result<(), BotError> {
+) -> Result<(), BrowserError> {
     let navigate_params = NavigateParameters::new(
         browsing_context.clone(),
         url.into(),
@@ -46,14 +44,17 @@ pub async fn load(
     session
         .browsing_context_navigate(navigate_params)
         .await
-        .map_err(|e| BotError::NavigationError(e.to_string()))?;
+        .map_err(|e| BrowserError::Navigation(e.to_string()))?;
     Ok(())
 }
 
 // --------------------------------------------------
 
 /// Navigates to the previous page in history.
-pub async fn go_back(session: &mut WebDriverBiDiSession, context: String) -> Result<(), BotError> {
+pub async fn go_back(
+    session: &mut WebDriverBiDiSession,
+    context: String,
+) -> Result<(), BrowserError> {
     traverse_history(session, context.to_owned(), BACK_DELTA).await?;
     Ok(())
 }
@@ -64,7 +65,7 @@ pub async fn go_back(session: &mut WebDriverBiDiSession, context: String) -> Res
 pub async fn go_forward(
     session: &mut WebDriverBiDiSession,
     context: String,
-) -> Result<(), BotError> {
+) -> Result<(), BrowserError> {
     traverse_history(session, context.to_owned(), FORWARD_DELTA).await?;
     Ok(())
 }
@@ -72,11 +73,14 @@ pub async fn go_forward(
 // --------------------------------------------------
 
 /// Reloads the current page.
-pub async fn reload(session: &mut WebDriverBiDiSession, context: String) -> Result<(), BotError> {
+pub async fn reload(
+    session: &mut WebDriverBiDiSession,
+    context: String,
+) -> Result<(), BrowserError> {
     let reload_params = ReloadParameters::new(context, None, Some(ReadinessState::Complete));
     session
         .browsing_context_reload(reload_params)
         .await
-        .map_err(|e| BotError::NavigationError(e.to_string()))?;
+        .map_err(|e| BrowserError::Navigation(e.to_string()))?;
     Ok(())
 }

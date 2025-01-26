@@ -4,18 +4,18 @@ use webdriverbidi::session::WebDriverBiDiSession;
 
 // --------------------------------------------------
 
-use crate::error::BotError;
+use crate::error::BrowserError;
 use crate::{nav, screenshot};
 
 // --------------------------------------------------
 
 // Alias Capabilities and CapabilityRequest from webdriverbidi for easy import
-pub type Capabilities = webdriverbidi::webdriver::capabilities::Capabilities;
+pub type CapabilitiesRequest = webdriverbidi::webdriver::capabilities::CapabilitiesRequest;
 pub type CapabilityRequest = webdriverbidi::webdriver::capabilities::CapabilityRequest;
 
 // --------------------------------------------------
 
-/// The `Bot` struct provides an interface for managing a WebDriver BiDi session
+/// The `Browser` struct provides an interface for managing a WebDriver BiDi session
 /// and performing browser operations such as opening, closing, and navigating to URLs.
 ///
 /// # Fields
@@ -25,24 +25,24 @@ pub type CapabilityRequest = webdriverbidi::webdriver::capabilities::CapabilityR
 /// # Errors
 /// Methods in this struct return `Result` types and may produce errors related to session creation,
 /// navigation, and other browser operations. These errors are encapsulated in the `BrowserError` enum.
-pub struct Bot {
+pub struct Browser {
     pub webdriverbidi_session: WebDriverBiDiSession,
     pub browsing_context: Option<String>,
 }
 
 // --------------------------------------------------
 
-impl Bot {
+impl Browser {
     /// Returns the browsing context if it's not None.
     ///
     /// # Errors
     ///
-    /// A `BotError::NavigationError` error is returned if the context value is None.
-    fn get_context(&self) -> Result<String, BotError> {
+    /// A `BrowserError::NavigationError` error is returned if the context value is None.
+    fn get_context(&self) -> Result<String, BrowserError> {
         let ctx = self
             .browsing_context
             .as_ref()
-            .ok_or_else(|| BotError::NavigationError("No browsing context available".to_owned()))?;
+            .ok_or_else(|| BrowserError::Navigation("No browsing context available".to_owned()))?;
         Ok(ctx.to_string())
     }
 }
@@ -50,7 +50,27 @@ impl Bot {
 // --------------------------------------------------
 
 // WebDriverBiDi session management
-impl Bot {
+impl Browser {
+    /// Creates a new `Browser` instance with default capabilities and the specified host and port.
+    ///
+    /// # Arguments
+    /// - `host`: The host address of the WebDriver BiDi server.
+    /// - `port`: The port number of the WebDriver BiDi server.
+    ///
+    /// # Returns
+    /// A new instance of `Browser`.
+    pub fn new(host: &str, port: u16) -> Self {
+        debug!(
+            "Creating a new Browser instance with host: {}, port: {}",
+            host, port
+        );
+        let capabilities = CapabilitiesRequest::default();
+        Self {
+            webdriverbidi_session: WebDriverBiDiSession::new(host.to_string(), port, capabilities),
+            browsing_context: None,
+        }
+    }
+
     /// Creates a new `Browser` instance with the specified capabilities, host, and port.
     ///
     /// # Arguments
@@ -60,7 +80,7 @@ impl Bot {
     ///
     /// # Returns
     /// A new instance of `Browser`.
-    pub fn new(capabilities: Capabilities, host: &str, port: u16) -> Self {
+    pub fn new_with_capabilities(capabilities: CapabilitiesRequest, host: &str, port: u16) -> Self {
         debug!(
             "Creating a new Browser instance with host: {}, port: {}, capabilities: {:?}",
             host, port, capabilities
@@ -76,12 +96,12 @@ impl Bot {
     /// # Errors
     /// Returns a `BrowserError::SessionCreationError` if the session could not be started
     /// or if the `browsingContext.getTree` command fails.
-    pub async fn open(&mut self) -> Result<(), BotError> {
+    pub async fn open(&mut self) -> Result<(), BrowserError> {
         debug!("Starting the WebDriver BiDi session");
-        let _ = self.webdriverbidi_session.start().await.map_err(|e| {
-            BotError::SessionCreationError(format!(
+        self.webdriverbidi_session.start().await.map_err(|e| {
+            BrowserError::SessionCreation(format!(
                 "Starting the WebDriverBiDi session failed: {}",
-                e.to_string()
+                e
             ))
         })?;
         debug!("WebDriver BiDi session started successfully");
@@ -93,9 +113,9 @@ impl Bot {
             .browsing_context_get_tree(get_tree_params)
             .await
             .map_err(|e| {
-                BotError::SessionCreationError(format!(
+                BrowserError::SessionCreation(format!(
                     "The browsingContext.getTree command failed: {}",
-                    e.to_string()
+                    e
                 ))
             })?;
         self.browsing_context = Some(get_tree_rslt.contexts[0].context.clone());
@@ -107,12 +127,12 @@ impl Bot {
     ///
     /// # Errors
     /// Returns a `BrowserError::SessionClosingError` if the session could not be closed.
-    pub async fn close(&mut self) -> Result<(), BotError> {
+    pub async fn close(&mut self) -> Result<(), BrowserError> {
         debug!("Closing the WebDriver BiDi session");
         self.webdriverbidi_session.close().await.map_err(|e| {
-            BotError::SessionClosingError(format!(
+            BrowserError::SessionClosing(format!(
                 "Closing the WebDriver BiDi session failed: {}",
-                e.to_string()
+                e
             ))
         })?;
         debug!("WebDriver BiDi session closed successfully");
@@ -123,7 +143,7 @@ impl Bot {
 // --------------------------------------------------
 
 // Navigation
-impl Bot {
+impl Browser {
     /// Navigates to the specified URL within the current browsing context.
     ///
     /// # Arguments
@@ -132,7 +152,7 @@ impl Bot {
     /// # Errors
     /// Returns a `BrowserError::NavigationError` if no browsing context is available
     /// or if the navigation command fails.
-    pub async fn load(&mut self, url: &str) -> Result<(), BotError> {
+    pub async fn load(&mut self, url: &str) -> Result<(), BrowserError> {
         debug!("Navigating to URL: {}", url);
         let ctx = self.get_context()?;
         nav::load(&mut self.webdriverbidi_session, ctx, url).await?;
@@ -147,7 +167,7 @@ impl Bot {
     /// # Errors
     /// Returns a `BrowserError::NavigationError` if no browsing context is available
     /// or if navigating back failed.
-    pub async fn go_back(&mut self) -> Result<(), BotError> {
+    pub async fn go_back(&mut self) -> Result<(), BrowserError> {
         let ctx = self.get_context()?;
         nav::go_back(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
@@ -160,7 +180,7 @@ impl Bot {
     /// # Errors
     /// Returns a `BrowserError::NavigationError` if no browsing context is available
     /// or if navigating forward failed.
-    pub async fn go_forward(&mut self) -> Result<(), BotError> {
+    pub async fn go_forward(&mut self) -> Result<(), BrowserError> {
         let ctx = self.get_context()?;
         nav::go_forward(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
@@ -173,7 +193,7 @@ impl Bot {
     /// # Errors
     /// Returns a `BrowserError::NavigationError` if no browsing context is available
     /// or if navigating forward failed.
-    pub async fn reload(&mut self) -> Result<(), BotError> {
+    pub async fn reload(&mut self) -> Result<(), BrowserError> {
         let ctx = self.get_context()?;
         nav::reload(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
@@ -183,12 +203,10 @@ impl Bot {
 // --------------------------------------------------
 
 // Screenshots
-impl Bot {
-    
-    pub async fn take_screenshot(&mut self) -> Result<String, BotError> {
+impl Browser {
+    pub async fn take_screenshot(&mut self) -> Result<String, BrowserError> {
         let ctx = self.get_context()?;
         let data = screenshot::take_screenshot(&mut self.webdriverbidi_session, ctx).await?;
         Ok(data)
     }
-    
 }

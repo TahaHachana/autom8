@@ -1,33 +1,34 @@
-use autom8::bot::{Bot, Capabilities, CapabilityRequest};
-use tokio;
+use anyhow::Result;
+use tokio::time;
 
 // --------------------------------------------------
 
-async fn sleep(secs: u64) {
-    tokio::time::sleep(tokio::time::Duration::from_secs(secs)).await
+use autom8::Browser;
+
+// --------------------------------------------------
+
+const LOCALHOST: &str = "localhost";
+const PORT: u16 = 4444;
+
+// --------------------------------------------------
+
+async fn sleep_for_secs(secs: u64) {
+    time::sleep(tokio::time::Duration::from_secs(secs)).await
 }
 
 // --------------------------------------------------
 
 #[tokio::main]
-async fn main() {
-    // Define the expected WebDriver capabilities
-    let always_match = CapabilityRequest::new();
-    let capabilities = Capabilities::new(always_match);
+async fn main() -> Result<()> {
+    // Initialize and open a new browser
+    let mut browser = Browser::new(LOCALHOST, PORT);
+    browser.open().await?;
 
-    // Initialize a new Bot instance
-    let mut bot = Bot::new(capabilities, "localhost", 4444);
-    // Open the browser window
-    bot.open().await.unwrap();
+    // Load rust-lang.org
+    browser.load("https://www.rust-lang.org/").await?;
+    sleep_for_secs(2).await;
 
-    // Go to rust-lang.org
-    bot.load("https://www.rust-lang.org/").await.expect("");
-    
-    let png = bot.take_screenshot().await.unwrap();
-    println!("{png}");
-    
-    sleep(3).await;
-
-    // Clone the browser window
-    bot.close().await.unwrap();
+    // Close the browser window
+    browser.close().await.unwrap();
+    Ok(())
 }

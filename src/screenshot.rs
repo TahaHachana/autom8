@@ -5,31 +5,31 @@ use webdriverbidi::session::WebDriverBiDiSession;
 
 // --------------------------------------------------
 
-use crate::error::BotError;
+use crate::error::BrowserError;
 
 // --------------------------------------------------
 
-/// Traverses the browsing history in the given context by the specified delta.
+/// Takes a screenshot of the current page.
 pub async fn take_screenshot(
     session: &mut WebDriverBiDiSession,
     context: String,
-) -> Result<String, BotError> {
+) -> Result<String, BrowserError> {
+    let origin = Some(CaptureScreenshotParametersOrigin::Document);
+    let format = Some(ImageFormat {
+        // TODO - Strongly typed image format
+        image_format_type: "png".to_owned(),
+        quality: None,
+    });
     let params = CaptureScreenshotParameters {
         context,
-        origin: Some(CaptureScreenshotParametersOrigin::Document),
-        format: Some(ImageFormat {
-            image_format_type: "png".to_owned(),
-            quality: None,
-        }),
+        origin,
+        format,
         clip: None,
     };
-
     let rslt = session
         .browsing_context_capture_screenshot(params)
         .await
-        .map_err(|e| {
-            BotError::ScreenshotError(format!("Taking the screenshot failed: {}", e.to_string()))
-        })?;
+        .map_err(|e| BrowserError::Screenshot(format!("Taking the screenshot failed: {}", e)))?;
 
     Ok(rslt.data)
 }

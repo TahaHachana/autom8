@@ -1,31 +1,31 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum BotError {
+pub enum BrowserError {
     #[error("Session creation error: {0}")]
-    SessionCreationError(String),
+    SessionCreation(String),
 
     #[error("Session closing error: {0}")]
-    SessionClosingError(String),
+    SessionClosing(String),
 
     #[error("Navigation error: {0}")]
-    NavigationError(String),
+    Navigation(String),
 
     #[error("Action error: {0}")]
-    ActionError(String),
+    Action(String),
 
     #[error("Element error: {0}")]
-    ElementError(String),
+    Element(String),
 
     #[error("Cookie error: {0}")]
-    CookieError(String),
+    Cookie(String),
 
     #[error("JavaScript error: {0}")]
-    JavaScriptError(String),
+    JavaScript(String),
 
     #[error("Screenshot error: {0}")]
-    ScreenshotError(String),
+    Screenshot(String),
 
     #[error("Unknown error: {0}")]
-    UnknownError(String),
+    Unknown(String),
 }
