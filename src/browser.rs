@@ -1,11 +1,14 @@
 use log::debug;
+
+// --------------------------------------------------
+
 use webdriverbidi::remote::browsing_context::GetTreeParameters;
 use webdriverbidi::session::WebDriverBiDiSession;
 
 // --------------------------------------------------
 
 use crate::error::BrowserError;
-use crate::{nav, screenshot};
+use crate::{local_storage, nav, screenshot};
 
 // --------------------------------------------------
 
@@ -160,8 +163,6 @@ impl Browser {
         Ok(())
     }
 
-    // --------------------------------------------------
-
     /// Navigates to the previous page in history.
     ///
     /// # Errors
@@ -173,8 +174,6 @@ impl Browser {
         Ok(())
     }
 
-    // --------------------------------------------------
-
     /// Navigates to the next page in history.
     ///
     /// # Errors
@@ -185,8 +184,6 @@ impl Browser {
         nav::go_forward(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
     }
-
-    // --------------------------------------------------
 
     /// Reloads the current page.
     ///
@@ -204,9 +201,59 @@ impl Browser {
 
 // Screenshots
 impl Browser {
+    /// Takes a screenshot of the current page and returns the data as a base64-encoded string.
+    /// 
+    /// # Errors
+    /// Returns a `BrowserError::ScreenshotError` if no browsing context is available
+    /// or if taking the screenshot fails.
     pub async fn take_screenshot(&mut self) -> Result<String, BrowserError> {
         let ctx = self.get_context()?;
         let data = screenshot::take_screenshot(&mut self.webdriverbidi_session, ctx).await?;
         Ok(data)
+    }
+}
+
+// --------------------------------------------------
+
+// Local storage
+impl Browser {
+    /// Sets a value in the local storage of the current browsing context.
+    /// 
+    /// # Arguments
+    /// 
+    /// - `key`: The key to set in the local storage.
+    /// - `value`: The value to set in the local storage.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns a `BrowserError::LocalStorageError` if no browsing context is available
+    /// or if setting the local storage value fails.
+    pub async fn set_local_storage_value(
+        &mut self,
+        key: &str,
+        value: &str,
+    ) -> Result<(), BrowserError> {
+        let ctx = self.get_context()?;
+        local_storage::set_local_storage(&mut self.webdriverbidi_session, ctx.as_str(), key, value)
+            .await?;
+        Ok(())
+    }
+
+    /// Gets a value from the local storage of the current browsing context.
+    /// 
+    /// # Arguments
+    /// 
+    /// - `key`: The key to get from the local storage.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns a `BrowserError::LocalStorageError` if no browsing context is available
+    /// or if getting the local storage value fails.
+    pub async fn get_local_storage_value(
+        &mut self,
+        key: &str,
+    ) -> Result<Option<String>, BrowserError> {
+        let ctx = self.get_context()?;
+        local_storage::get_local_storage(&mut self.webdriverbidi_session, ctx.as_str(), key).await
     }
 }

@@ -1,5 +1,6 @@
 pub mod browser;
 mod error;
+mod local_storage;
 mod nav;
 mod screenshot;
 

@@ -1584,9 +1584,9 @@ dependencies = [
 
 [[package]]
 name = "webdriverbidi"
-version = "0.1.13"
+version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b01503b88e59255ed1c9759e08ac36ce3bccc828d30b382316c4f5220c05de6"
+checksum = "fe7ee77b57964ab5ce5e9ca0f6b80e5159e777f1bd61f57bd9b583b9cf966538"
 dependencies = [
  "futures",
  "log",

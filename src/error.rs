@@ -23,6 +23,9 @@ pub enum BrowserError {
     #[error("JavaScript error: {0}")]
     JavaScript(String),
 
+    #[error("LocalStorage error: {0}")]
+    LocalStorage(String),
+
     #[error("Screenshot error: {0}")]
     Screenshot(String),
 

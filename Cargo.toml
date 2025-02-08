@@ -9,7 +9,7 @@ repository = "https://github.com/TahaHachana/autom8"
 
 [dependencies]
 thiserror = "2.0.9"
-webdriverbidi = "0.1.13"
+webdriverbidi = "0.1.16"
 log = "0.4.22"
 base64 = "0.22.1"
 
