@@ -29,6 +29,6 @@ async fn main() -> Result<()> {
     sleep_for_secs(2).await;
 
     // Close the browser window
-    browser.close().await.unwrap();
+    browser.close().await?;
     Ok(())
 }

@@ -202,7 +202,7 @@ impl Browser {
 // Screenshots
 impl Browser {
     /// Takes a screenshot of the current page and returns the data as a base64-encoded string.
-    /// 
+    ///
     /// # Errors
     /// Returns a `BrowserError::ScreenshotError` if no browsing context is available
     /// or if taking the screenshot fails.
@@ -218,14 +218,14 @@ impl Browser {
 // Local storage
 impl Browser {
     /// Sets a value in the local storage of the current browsing context.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// - `key`: The key to set in the local storage.
     /// - `value`: The value to set in the local storage.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns a `BrowserError::LocalStorageError` if no browsing context is available
     /// or if setting the local storage value fails.
     pub async fn set_local_storage_value(
@@ -240,13 +240,13 @@ impl Browser {
     }
 
     /// Gets a value from the local storage of the current browsing context.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// - `key`: The key to get from the local storage.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns a `BrowserError::LocalStorageError` if no browsing context is available
     /// or if getting the local storage value fails.
     pub async fn get_local_storage_value(

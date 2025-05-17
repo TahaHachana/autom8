@@ -1,18 +1,18 @@
 [package]
 name = "autom8"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["Taha Hachana <tahahachana@gmail.com>"]
 description = "High level browser automation built on the webdriverbidi crate."
 license = "MIT"
 repository = "https://github.com/TahaHachana/autom8"
 
 [dependencies]
-thiserror = "2.0.9"
+thiserror = "2.0.11"
 webdriverbidi = "0.1.16"
-log = "0.4.22"
+log = "0.4.25"
 base64 = "0.22.1"
 
 [dev-dependencies]
-tokio = "1.42.0"
-anyhow = "1.0"
+tokio = "1.43.0"
+anyhow = "1.0.95"
