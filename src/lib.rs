@@ -1,3 +1,4 @@
+mod assertions;
 pub mod browser;
 mod error;
 mod local_storage;

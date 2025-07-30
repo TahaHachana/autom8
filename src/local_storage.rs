@@ -1,5 +1,5 @@
-use webdriverbidi::local::script::{EvaluateResult, RemoteValue};
-use webdriverbidi::remote::script::{
+use webdriverbidi::model::script::{EvaluateResult, RemoteValue};
+use webdriverbidi::model::script::{
     CallFunctionParameters, ContextTarget, LocalValue, PrimitiveProtocolValue, StringValue, Target,
 };
 use webdriverbidi::session::WebDriverBiDiSession;
@@ -87,7 +87,7 @@ pub async fn get_local_storage(
             let remote_value = eval_rslt_success.result;
             match remote_value {
                 RemoteValue::PrimitiveProtocolValue(
-                    webdriverbidi::local::script::PrimitiveProtocolValue::StringValue(string_value),
+                    webdriverbidi::model::script::PrimitiveProtocolValue::StringValue(string_value),
                 ) => Ok(Some(string_value.value)),
                 _ => Ok(None),
             }

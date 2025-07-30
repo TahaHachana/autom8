@@ -29,6 +29,9 @@ pub enum BrowserError {
     #[error("Screenshot error: {0}")]
     Screenshot(String),
 
+    #[error("Assertion error: {0}")]
+    Assertion(String),
+
     #[error("Unknown error: {0}")]
     Unknown(String),
 }

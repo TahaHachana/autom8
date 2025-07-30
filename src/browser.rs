@@ -2,13 +2,13 @@ use log::debug;
 
 // --------------------------------------------------
 
-use webdriverbidi::remote::browsing_context::GetTreeParameters;
+use webdriverbidi::model::browsing_context::GetTreeParameters;
 use webdriverbidi::session::WebDriverBiDiSession;
 
 // --------------------------------------------------
 
 use crate::error::BrowserError;
-use crate::{local_storage, nav, screenshot};
+use crate::{assertions, local_storage, nav, screenshot};
 
 // --------------------------------------------------
 
@@ -255,5 +255,22 @@ impl Browser {
     ) -> Result<Option<String>, BrowserError> {
         let ctx = self.get_context()?;
         local_storage::get_local_storage(&mut self.webdriverbidi_session, ctx.as_str(), key).await
+    }
+}
+
+// Assertions
+impl Browser {
+    /// Asserts that an element is present in the current page by checking if it can be selected
+    /// using the provided CSS selector.
+    ///
+    /// # Arguments
+    /// - `selector`: The CSS selector of the element to check.
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::AssertionError` if script evaluation fails.
+    pub async fn assert_element_present(&mut self, selector: &str) -> Result<bool, BrowserError> {
+        let ctx = self.get_context()?;
+        assertions::assert_element_present(&mut self.webdriverbidi_session, ctx.as_str(), selector)
+            .await
     }
 }

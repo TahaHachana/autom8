@@ -1,4 +1,4 @@
-use webdriverbidi::remote::browsing_context::{
+use webdriverbidi::model::browsing_context::{
     NavigateParameters, ReadinessState, ReloadParameters, TraverseHistoryParameters,
 };
 use webdriverbidi::session::WebDriverBiDiSession;

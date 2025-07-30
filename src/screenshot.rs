@@ -1,4 +1,4 @@
-use webdriverbidi::remote::browsing_context::{
+use webdriverbidi::model::browsing_context::{
     CaptureScreenshotParameters, CaptureScreenshotParametersOrigin, ImageFormat,
 };
 use webdriverbidi::session::WebDriverBiDiSession;
