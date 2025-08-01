@@ -36,6 +36,7 @@ dependencies = [
  "anyhow",
  "base64",
  "log",
+ "serde_json",
  "thiserror",
  "tokio",
  "webdriverbidi",

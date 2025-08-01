@@ -1,6 +1,9 @@
+use std::time::Duration;
+use log::debug;
 use webdriverbidi::model::browsing_context::{
     NavigateParameters, ReadinessState, ReloadParameters, TraverseHistoryParameters,
 };
+use webdriverbidi::model::script::{EvaluateParameters, Target, ContextTarget, EvaluateResult, RemoteValue, PrimitiveProtocolValue};
 use webdriverbidi::session::WebDriverBiDiSession;
 
 // --------------------------------------------------
@@ -83,4 +86,77 @@ pub async fn reload(
         .await
         .map_err(|e| BrowserError::Navigation(e.to_string()))?;
     Ok(())
+}
+
+// --------------------------------------------------
+
+/// Waits for any ongoing page loading to complete.
+/// This uses JavaScript to check document.readyState and waits for "complete" status.
+/// If the page is already loaded, it returns immediately.
+///
+/// # Arguments
+/// - `session`: The WebDriverBiDiSession to use
+/// - `context`: The browsing context to check
+/// - `timeout_ms`: Maximum time to wait for page load in milliseconds (default: 10000)
+///
+/// # Errors
+/// Returns a `BrowserError::NavigationError` if the page doesn't load within the timeout
+pub async fn wait_for_page_load(
+    session: &mut WebDriverBiDiSession,
+    context: String,
+    timeout_ms: Option<u64>,
+) -> Result<(), BrowserError> {
+    let timeout = Duration::from_millis(timeout_ms.unwrap_or(10000));
+    let start_time = std::time::Instant::now();
+    
+    debug!("Checking page load status for context: {}", context);
+    
+    while start_time.elapsed() < timeout {
+        // Check document ready state
+        let script = "document.readyState";
+        let target = Target::ContextTarget(ContextTarget::new(context.clone(), None));
+        let params = EvaluateParameters::new(script.to_string(), target, false, None, None, None);
+        
+        match session.script_evaluate(params).await {
+            Ok(result) => {
+                if let EvaluateResult::EvaluateResultSuccess(success) = result {
+                    if let RemoteValue::PrimitiveProtocolValue(
+                        PrimitiveProtocolValue::StringValue(state)
+                    ) = success.result {
+                        debug!("Document ready state: {}", state.value);
+                        
+                        match state.value.as_str() {
+                            "complete" => {
+                                debug!("Page is fully loaded");
+                                return Ok(());
+                            }
+                            "interactive" => {
+                                debug!("Page is interactive, DOM loaded but resources may still be loading");
+                                // For many use cases, interactive is sufficient
+                                // But we'll continue waiting for complete state
+                            }
+                            "loading" => {
+                                debug!("Page is still loading");
+                            }
+                            _ => {
+                                debug!("Unknown ready state: {}", state.value);
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                debug!("Failed to check document ready state: {}", e);
+                // If we can't check the state, assume there might be navigation happening
+            }
+        }
+        
+        // Wait a bit before checking again
+        tokio::time::sleep(Duration::from_millis(200)).await;
+    }
+    
+    Err(BrowserError::Navigation(format!(
+        "Page load timeout after {} milliseconds", 
+        timeout.as_millis()
+    )))
 }

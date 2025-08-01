@@ -8,7 +8,7 @@ use webdriverbidi::session::WebDriverBiDiSession;
 // --------------------------------------------------
 
 use crate::error::BrowserError;
-use crate::{assertions, local_storage, nav, screenshot};
+use crate::{assertions, input, local_storage, nav, screenshot};
 
 // --------------------------------------------------
 
@@ -195,6 +195,19 @@ impl Browser {
         nav::reload(&mut self.webdriverbidi_session, ctx).await?;
         Ok(())
     }
+
+    /// Waits for the current page to finish loading.
+    ///
+    /// # Arguments
+    /// - `timeout_ms`: Maximum time to wait for page load in milliseconds (default: 10000)
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::NavigationError` if the page doesn't load within the timeout.
+    pub async fn wait_for_page_load(&mut self, timeout_ms: Option<u64>) -> Result<(), BrowserError> {
+        let ctx = self.get_context()?;
+        nav::wait_for_page_load(&mut self.webdriverbidi_session, ctx, timeout_ms).await?;
+        Ok(())
+    }
 }
 
 // --------------------------------------------------
@@ -272,5 +285,54 @@ impl Browser {
         let ctx = self.get_context()?;
         assertions::assert_element_present(&mut self.webdriverbidi_session, ctx.as_str(), selector)
             .await
+    }
+}
+
+// --------------------------------------------------
+
+// Input/Interaction
+impl Browser {
+    /// Clicks on an element identified by a CSS selector.
+    ///
+    /// # Arguments
+    /// - `selector`: CSS selector to identify the element to click
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::Action` if the element is not found or clicking fails.
+    pub async fn click_element(&mut self, selector: &str) -> Result<(), BrowserError> {
+        let ctx = self.get_context()?;
+        input::click_element(&mut self.webdriverbidi_session, ctx.as_str(), selector).await
+    }
+
+    /// Clicks on an element after waiting for it to become clickable.
+    ///
+    /// # Arguments
+    /// - `selector`: CSS selector to identify the element to click
+    /// - `timeout_ms`: Maximum time to wait for element to be clickable (default: 5000ms)
+    ///
+    /// # Errors
+    /// Returns a `BrowserError::Action` if the element is not found or doesn't become clickable within timeout.
+    pub async fn wait_and_click_element(&mut self, selector: &str, timeout_ms: Option<u64>) -> Result<(), BrowserError> {
+        let ctx = self.get_context()?;
+        input::wait_and_click_element(&mut self.webdriverbidi_session, ctx.as_str(), selector, timeout_ms).await
+    }
+
+    /// Clicks an element and then waits for page load to complete.
+    /// This is useful for clicking links or buttons that navigate to a new page.
+    ///
+    /// # Arguments
+    /// - `selector`: CSS selector to identify the element to click
+    /// - `page_load_timeout_ms`: Maximum time to wait for page load (default: 10000ms)
+    ///
+    /// # Errors
+    /// Returns a `BrowserError` if clicking fails or page doesn't load within timeout.
+    pub async fn click_and_wait(&mut self, selector: &str, page_load_timeout_ms: Option<u64>) -> Result<(), BrowserError> {
+        // Click the element
+        self.click_element(selector).await?;
+        
+        // Wait for any resulting page navigation to complete
+        self.wait_for_page_load(page_load_timeout_ms).await?;
+        
+        Ok(())
     }
 }

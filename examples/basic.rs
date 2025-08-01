@@ -26,6 +26,7 @@ async fn main() -> Result<()> {
 
     // Load rust-lang.org
     browser.load("https://www.rust-lang.org/").await?;
+
     sleep_for_secs(2).await;
 
     // Close the browser window
