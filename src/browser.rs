@@ -8,7 +8,7 @@ use webdriverbidi::session::WebDriverBiDiSession;
 // --------------------------------------------------
 
 use crate::error::BrowserError;
-use crate::{assertions, input, local_storage, nav, screenshot};
+use crate::{assertions, extract, input, local_storage, nav, screenshot};
 
 // --------------------------------------------------
 
@@ -334,5 +334,68 @@ impl Browser {
         self.wait_for_page_load(page_load_timeout_ms).await?;
         
         Ok(())
+    }
+
+    /// Extracts the inner HTML of an element identified by a CSS selector.
+    /// This is equivalent to JavaScript's `innerHTML` property.
+    ///
+    /// # Arguments
+    /// - `selector`: CSS selector to identify the element
+    ///
+    /// # Returns
+    /// - `Ok(String)` containing the innerHTML of the element if found
+    /// - `Err(BrowserError)` if the element was not found or extraction failed
+    ///
+    /// # Example
+    /// ```rust
+    /// let html = browser.extract_inner_html("div.content").await?;
+    /// println!("Inner HTML: {}", html);
+    /// ```
+    pub async fn extract_inner_html(&mut self, selector: &str) -> Result<String, BrowserError> {
+        let ctx = self.get_context()?;
+        extract::extract_inner_html(&mut self.webdriverbidi_session, ctx.as_str(), selector).await
+    }
+
+    /// Extracts the inner text of an element identified by a CSS selector.
+    /// This is equivalent to JavaScript's `innerText` property.
+    ///
+    /// # Arguments
+    /// - `selector`: CSS selector to identify the element
+    ///
+    /// # Returns
+    /// - `Ok(String)` containing the innerText of the element if found
+    /// - `Err(BrowserError)` if the element was not found or extraction failed
+    ///
+    /// # Example
+    /// ```rust
+    /// let text = browser.extract_inner_text("h1").await?;
+    /// println!("Heading text: {}", text);
+    /// ```
+    pub async fn extract_inner_text(&mut self, selector: &str) -> Result<String, BrowserError> {
+        let ctx = self.get_context()?;
+        extract::extract_inner_text(&mut self.webdriverbidi_session, ctx.as_str(), selector).await
+    }
+
+    /// Extracts the value of a specific attribute from an element identified by a CSS selector.
+    ///
+    /// # Arguments
+    /// - `selector`: CSS selector to identify the element
+    /// - `attribute`: The name of the attribute to extract
+    ///
+    /// # Returns
+    /// - `Ok(Some(String))` containing the attribute value if the element and attribute exist
+    /// - `Ok(None)` if the element exists but the attribute doesn't
+    /// - `Err(BrowserError)` if the element was not found or extraction failed
+    ///
+    /// # Example
+    /// ```rust
+    /// let href = browser.extract_attribute("a.link", "href").await?;
+    /// if let Some(url) = href {
+    ///     println!("Link URL: {}", url);
+    /// }
+    /// ```
+    pub async fn extract_attribute(&mut self, selector: &str, attribute: &str) -> Result<Option<String>, BrowserError> {
+        let ctx = self.get_context()?;
+        extract::extract_attribute(&mut self.webdriverbidi_session, ctx.as_str(), selector, attribute).await
     }
 }
