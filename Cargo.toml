@@ -1,6 +1,6 @@
 [package]
 name = "autom8"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Taha Hachana <tahahachana@gmail.com>"]
 description = "High level browser automation built on the webdriverbidi crate."
